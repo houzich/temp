@@ -1,0 +1,10 @@
+--create Bluetooth_Bridge\FreeRTOS.lib
+bluetooth_bridge\port.o
+bluetooth_bridge\event_groups.o
+bluetooth_bridge\list.o
+bluetooth_bridge\queue.o
+bluetooth_bridge\croutine.o
+bluetooth_bridge\timers.o
+bluetooth_bridge\heap_4.o
+bluetooth_bridge\tasks.o
+bluetooth_bridge\cmsis_os.o

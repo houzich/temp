@@ -1,0 +1,49 @@
+
+/*1*/ static const Bluetooth_CommandTypeDef
+Cтруктуры хранятся во флэш памяти, кроме двух BluetoothCommandName и BluetoothCommandPassword для того чтобы пользователь мог менять
+имя и пароль модуля. В принципе они все могут храниться в оперативке, это немного проще в коде, но для экономии... В функциях Fill_Name_Command_Handle и Fill_Password_Command_Handle записывается туда строки с именем
+и паролем соответственно. Берутся они по ссылке со структуры Bluetooth_HandleTypeDef. Которая, в свою очередь, указывает 
+на какой-нибудь буфер в памяти со строкой.
+Поле command - команда
+Поле command_size - размер команды
+Поле response_as_ok - это строка или кусок строки при нахождении ее в ответе модема мы считаем что OK
+Поле timeout_before_response - Выслали команду, ждем такое-то время до поступления первого символа, 
+символ поступил отсчитываем timeout_between_packet. не поступил, принимаем "ответа нет".
+Поле timeout_between_packet - Так как модем может выдать строку, потом немного подождать, выслать вторую
+и не понятно когда он закончил. Эта таймаут между символами. Если истек timeout_between_packet после
+последнего символа, считает "конец нет". 
+Поле delay_after_response - в некоторых случаях модулю нужно время чтоб обработать команду, особенно это актуально
+для дешевых китайских модулей. Здесь задается задержка после получения ответа и отправкой следующей команды. Или, к примеру мы не знаем точно какой ответ должен прийти: "+VERSION: ...",
+тогда можно задать response_as_ok = "+VERSION:" и задежу по времени примерно равную приему оставшегося сообщения, и после 
+уже обрабатывать сообщение. Так как бывают модули в которых не все ответы (или не всегда) заканчиваются символом "\r". Или проще,
+можно OK поставить, этот модуль при успешном выполнении всегда его в конце ставит... В общем 
+про ответы с китайских модулей это отдельная тема.
+
+
+/*2*/ const Bluetooth_HandleCommandTypeDef *BluetoothInitCommandsForSlave[] - переменую их потом, просто сейчас это название играет во многих
+файлах
+если нужно будет синициализировать модуль на какой-нибудь другой режим, к примеру на PPPoE или на что еще другое.
+в этом модуле кроме как передачи данных ничего нет, но в других есть
+Создаешь подобную структуру BluetoothInitCommandsForXXX. Потом объявлешь для RAM.
+которая содержит в себе ссылку на список команд и их количество.
+Bluetooth_SessionTypeDef BluetoothInitSessionForSMS =
+{
+  .coommands = (Bluetooth_HandleCommandTypeDef *(*)[])&BluetoothInitCommandsForXXX,
+  .cmds_num =   (sizeof(*BluetoothInitCommandsForXXX) / sizeof(Bluetooth_HandleCommandTypeDef *))
+};
+в главную структуру Bluetooth заносишь 
+    blueth->curr_session = &BluetoothInitSessionForXXX;       			*/
+    blueth->curr_command = (*(BluetoothInitSessionForXXX.init_coommands))[0];
+и вызываешь Bluetooth_Init
+к примеру для режима Master
+
+/*3*/
+void Bluetooth_Init(void const *argument)
+Bluetooth_HandleCommandTypeDef *(*init_commands)[] - указатель на массив указателей на структуры Bluetooth_HandleCommandTypeDef
+передаем сюда из структуры Bluetooth - указатель на BluetoothInitCommandsForSlave
+
+/*4*/
+static void Enable_Init_Cmd(Bluetooth_HandleTypeDef *blueth)
+проходим по все командам сессии и сбрасываем флаг skip(этот флаг пропустить команду,
+используется когда на команду нет ответа, или не тот ответ, ошибка -
+идем на повтор, и тогда по этому флагу пропускаются предыдущие команды и снова повторяется эта.

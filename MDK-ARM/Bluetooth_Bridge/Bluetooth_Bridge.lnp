@@ -1,0 +1,17 @@
+--cpu=Cortex-M4.fp
+"bluetooth_bridge\startup_stm32f407xx.o"
+"bluetooth_bridge\system_stm32f4xx.o"
+".\Bluetooth_Bridge\FreeRTOS.lib"
+".\Bluetooth_Bridge\HAL.lib"
+"bluetooth_bridge\stm32f4xx_hal_msp.o"
+"bluetooth_bridge\main.o"
+"bluetooth_bridge\freertos.o"
+"bluetooth_bridge\stm32f4xx_it.o"
+"bluetooth_bridge\stm32f4xx_hal_timebase_tim.o"
+"bluetooth_bridge\bluetooth_interface.o"
+"bluetooth_bridge\hc0506_usart.o"
+"bluetooth_bridge\retarget_io.o"
+--library_type=microlib --strict --scatter "Bluetooth_Bridge\Bluetooth_Bridge.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "Bluetooth_Bridge.map" -o Bluetooth_Bridge\Bluetooth_Bridge.axf
